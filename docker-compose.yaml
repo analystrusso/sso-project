@@ -1,0 +1,45 @@
+version: '2'
+services:
+  ldap:
+    image: osixia/openldap:latest
+    container_name: ldap
+    environment:
+      - LDAP_ORGANIZATION=russoindustries
+      - LDAP_DOMAIN=example.in
+      - "LDAP_BASE_DN=dc=example,dc=in"
+      - LDAP_ADMIN_PASSWORD=password
+    volumes:
+      - ldap_data:/var/lib/ldap
+      - ldap_config:/etc/ldap/slapd.d
+    ports:
+      - 389:389
+      - 636:636
+  
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    environment:
+      - KEYCLOAK_ADMIN=arusso-admin
+      - KEYCLOAK_ADMIN_PASSWORD=adminpass
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    command: start-dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      - ldap
+
+  intranet-app:
+    build: .
+    container_name: intranet-app
+    environment:
+      - KEYCLOAK_CLIENT_SECRET=MYRvCikrhXXJixXhSuzqnRfop1elVscy
+    ports:
+      - "8000:8000"
+    depends_on:
+      - keycloak
+
+volumes:
+  ldap_data:
+  ldap_config:
+  keycloak_data:
