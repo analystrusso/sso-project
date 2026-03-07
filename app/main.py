@@ -4,6 +4,7 @@ import logging
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from fastapi.responses import RedirectResponse, JSONResponse
+from prometheus_fastapi_instrumentator import Instrumentator
 from keycloak import KeycloakOpenID
 
 
@@ -27,21 +28,26 @@ keycloak_openid = KeycloakOpenID(
 
 def require_role(required_role: str):
     async def role_checker(token:str = Depends(oauth2_scheme)):
-        user_info = keycloak_openid.userinfo(token)
-
-        roles = user_info.get("realm_access", {}).get("roles", [])
-
-        if required_role not in roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Forbidden"
-            )
-        
-        return user_info
+        try:
+            token_info = keycloak_openid.decode_token(token)
+            roles = token_info.get("realm_access", {}).get("roles", [])
+            if required_role not in roles:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Forbidden"
+                )
+            return token_info
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                detail="Not authenticated")
     return role_checker
 
 app = FastAPI()
 
+
+Instrumentator().instrument(app).expose(app)
 
 @app.get("/protected")
 async def protected(token: str = Depends(oauth2_scheme)):
@@ -65,12 +71,16 @@ async def login():
 
 @app.get("/callback")
 async def callback(code: str):
-    token = keycloak_openid.token(
-        grant_type="authorization_code",
-        code=code,
-        redirect_uri="http://localhost:8000/callback"
-    )
-    return JSONResponse(token)
+    try:
+        token = keycloak_openid.token(
+            grant_type="authorization_code",
+            code=code,
+            redirect_uri="http://localhost:8000/callback"
+        )
+        return JSONResponse(token)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Token exchange failed")
 
 @app.get("/")
 async def homepage():

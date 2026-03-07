@@ -1,3 +1,4 @@
 uvicorn
 fastapi
 python-keycloak
+prometheus_fastapi_instrumentator

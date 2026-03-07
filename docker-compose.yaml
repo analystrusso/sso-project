@@ -1,39 +1,111 @@
-version: '2'
 services:
   ldap:
-    image: osixia/openldap:latest
+    image: cleanstart/openldap:latest
     container_name: ldap
-    environment:
-      - LDAP_ORGANIZATION=russoindustries
-      - LDAP_DOMAIN=example.in
-      - "LDAP_BASE_DN=dc=example,dc=in"
-      - LDAP_ADMIN_PASSWORD=password
+    command: ["-u", "ldap", "-g", "ldap", "-h", "ldap:/// ldaps:///", "-d", "64"]
+    healthcheck:
+      test: ["CMD", "ldapsearch", "-H", "ldap://localhost", "-x", "-b", "dc=example,dc=in"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
-      - ldap_data:/var/lib/ldap
-      - ldap_config:/etc/ldap/slapd.d
+      - ldap_data:/var/lib/openldap
+      - ./ldap/slapd.conf:/etc/openldap/slapd.conf
+      - ./certs:/etc/openldap/certs
     ports:
-      - 389:389
-      - 636:636
+      - "389:389"
+      - "636:636"
+
+
+  ldap-exporter:
+    image: riftbit/openldap-exporter:latest
+    container_name: ldap-exporter
+    environment:
+      - LDAP_ADDR=ldap:389
+      - LDAP_USER=cn=admin,dc=example,dc=in
+      - LDAP_PASS=secret
+      - INTERVAL=30s
+    ports:
+      - "9330:9330"
+    depends_on:
+      ldap:
+        condition: service_healthy
+
   
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/rpometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - ldap-exporter
+      - keycloak
+      - intranet-app
+
+  
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+    - "3100:3100"
+    volumes:
+      - loki_data:/loki
+
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./monitoring/promtail.yml:/etc/promtail/config.yml
+    depends_on:
+      - loki
+
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+      - loki
+
+
   keycloak:
     image: quay.io/keycloak/keycloak:latest
     container_name: keycloak
     environment:
-      - KEYCLOAK_ADMIN=arusso-admin
+      - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=adminpass
+      - KC_TRUSTSTORE_PATHS=/opt/keycloak/certs/ca.crt
+      - KC_METRICS_ENABLED=true
+      - KC_HTTP_MANAGEMENT_PORT=9000
+      - JAVA_OPTS_APPEND=-Djdk.tls.client.protocols=TLSv1.2
+    command: start-dev
     volumes:
       - keycloak_data:/opt/keycloak/data
-    command: start-dev
+      - ./certs:/opt/keycloak/certs
     ports:
       - "8080:8080"
+      - "9000:9000"
     depends_on:
-      - ldap
+      ldap:
+        condition: service_healthy
 
+  
   intranet-app:
     build: .
     container_name: intranet-app
-    environment:
-      - KEYCLOAK_CLIENT_SECRET=MYRvCikrhXXJixXhSuzqnRfop1elVscy
+    env_file: .env
+    environment: []
     ports:
       - "8000:8000"
     depends_on:
@@ -41,5 +113,7 @@ services:
 
 volumes:
   ldap_data:
-  ldap_config:
   keycloak_data:
+  prometheus_data:
+  loki_data:
+  grafana_data:
