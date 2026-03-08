@@ -68,6 +68,27 @@ curl -s -X POST \
   "${KEYCLOAK_URL}/admin/realms/${REALM}/user-storage/${LDAP_ID}/sync?action=triggerFullSync" \
   -H "Authorization: Bearer ${ADMIN_TOKEN}"
 
+echo "Mapping realm roles to groups..."
+for GROUP in devops appdev; do
+  GROUP_ID=$(curl -s \
+    "${KEYCLOAK_URL}/admin/realms/${REALM}/groups" \
+    -H "Authorization: Bearer ${ADMIN_TOKEN}" \
+    | python3 -c "import sys,json; groups=json.load(sys.stdin); print(next(g['id'] for g in groups if g['name']=='${GROUP}'))")
+
+  ROLE_ID=$(curl -s \
+    "${KEYCLOAK_URL}/admin/realms/${REALM}/roles/${GROUP}" \
+    -H "Authorization: Bearer ${ADMIN_TOKEN}" \
+    | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+
+  curl -s -X POST \
+    "${KEYCLOAK_URL}/admin/realms/${REALM}/groups/${GROUP_ID}/role-mappings/realm" \
+    -H "Authorization: Bearer ${ADMIN_TOKEN}" \
+    -H "Content-Type: application/json" \
+    -d "[{\"id\":\"${ROLE_ID}\",\"name\":\"${GROUP}\"}]"
+
+  echo "Mapped role '${GROUP}' to group '${GROUP}'"
+done
+
 echo "Getting client UUID..."
 CLIENT_UUID=$(curl -s \
   "${KEYCLOAK_URL}/admin/realms/${REALM}/clients?clientId=${CLIENT_ID}" \

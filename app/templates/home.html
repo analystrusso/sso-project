@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Home - Intranet{% endblock %}
+{% block content %}
+{% if username %}
+    <h2>Welcome, {{ username }}</h2>
+    {% if 'devops' in roles %}
+    <div class="card mt-3">
+        <div class="card-header bg-primary text-white">DevOps</div>
+        <div class="card-body">
+            <p>You have access to the DevOps portal.</p>
+            <a href="/devops" class="btn btn-primary">Go to DevOps</a>
+        </div>
+    </div>
+    {% endif %}
+    {% if 'appdev' in roles %}
+    <div class="card mt-3">
+        <div class="card-header bg-success text-white">AppDev</div>
+        <div class="card-body">
+            <p>You have access to the AppDev portal.</p>
+            <a href="/appdev" class="btn btn-success">Go to AppDev</a>
+        </div>
+    </div>
+    {% endif %}
+    {% if 'devops' not in roles and 'appdev' not in roles %}
+    <div class="alert alert-warning mt-3">
+        You are logged in but have no roles assigned yet. Contact your administrator.
+    </div>
+    {% endif %}
+{% else %}
+    <div class="jumbotron mt-5 text-center">
+        <h1>Welcome to the Intranet</h1>
+        <p class="lead">Please log in to access your resources.</p>
+        <a href="/login" class="btn btn-primary btn-lg">Login</a>
+    </div>
+{% endif %}
+{% endblock %}

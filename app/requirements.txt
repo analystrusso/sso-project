@@ -2,3 +2,7 @@ uvicorn
 fastapi
 python-keycloak
 prometheus_fastapi_instrumentator
+httpx
+python-jose[cryptography]
+jinja2
+python-multipart

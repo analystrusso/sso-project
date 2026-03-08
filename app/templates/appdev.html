@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}AppDev - Intranet{% endblock %}
+{% block content %}
+<h2>AppDev Portal</h2>
+<p>Welcome, {{ username }}. This is the AppDev team page.</p>
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">Repositories</div>
+            <div class="card-body">
+                <p>Access code repositories.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">CI/CD Pipelines</div>
+            <div class="card-body">
+                <p>View pipeline status.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">Documentation</div>
+            <div class="card-body">
+                <p>Access team documentation.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
