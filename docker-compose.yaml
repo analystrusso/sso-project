@@ -4,7 +4,7 @@ services:
     container_name: ldap
     command: ["-u", "ldap", "-g", "ldap", "-h", "ldap:/// ldaps:///", "-d", "64"]
     healthcheck:
-      test: ["CMD", "ldapsearch", "-H", "ldap://localhost", "-x", "-b", "dc=example,dc=in"]
+      test: ["CMD", "ldapsearch", "-H", "ldap://localhost", "-x", "-b", "", "-s", "base", "(objectClass=*)"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -89,10 +89,11 @@ services:
       - KC_METRICS_ENABLED=true
       - KC_HTTP_MANAGEMENT_PORT=9000
       - JAVA_OPTS_APPEND=-Djdk.tls.client.protocols=TLSv1.2
-    command: start-dev
+    command: start-dev --import-realm
     volumes:
       - keycloak_data:/opt/keycloak/data
       - ./certs:/opt/keycloak/certs
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/intranet-app-realm.json
     ports:
       - "8080:8080"
       - "9000:9000"

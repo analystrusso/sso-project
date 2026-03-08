@@ -1,1 +1,0 @@
-cat: '/container/service/slapd/assets/certs/*.*': No such file or directory
