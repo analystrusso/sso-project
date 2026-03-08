@@ -33,6 +33,9 @@ certs:
 seed:
 	bash ldap/seed.sh
 
+realm-export:
+	bash keycloak/realm-export.sh
+
 init:
 	bash keycloak/init.sh
 

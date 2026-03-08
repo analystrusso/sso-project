@@ -25,8 +25,6 @@ TOKEN_RESPONSE=$(curl -s -X POST \
   "${KEYCLOAK_URL}/realms/master/protocol/openid-connect/token" \
   -d "client_id=admin-cli&grant_type=password&username=${KEYCLOAK_ADMIN}&password=${KEYCLOAK_ADMIN_PASSWORD}")
 
-echo "Token response: $TOKEN_RESPONSE"
-
 ADMIN_TOKEN=$(echo "$TOKEN_RESPONSE" | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
 
 if [ -z "$ADMIN_TOKEN" ]; then
@@ -117,5 +115,3 @@ sed -i "s/^KEYCLOAK_CLIENT_SECRET=.*/KEYCLOAK_CLIENT_SECRET=${NEW_SECRET}/" .env
 echo "Restarting intranet-app to pick up new secret..."
 sleep 30
 docker compose stop intranet-app && docker compose up -d intranet-app
-
-echo "New client secret: ${NEW_SECRET}"

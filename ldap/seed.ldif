@@ -30,6 +30,21 @@ userPassword: testpass
 homeDirectory: /home/testuser
 mail: testuser@example.in
 
+dn: uid=testuser2,ou=users,dc=example,dc=in
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: testuser2
+sn: User
+givenName: Test2
+cn: Test User 2
+displayName: Test User 2
+uidNumber: 10002
+gidNumber: 10002
+userPassword: testpass2
+homeDirectory: /home/testuser2
+mail: testuser2@example.in
+
 dn: cn=devops,ou=groups,dc=example,dc=in
 objectClass: top
 objectClass: posixGroup
@@ -42,6 +57,7 @@ objectClass: top
 objectClass: posixGroup
 cn: appdev
 gidNumber: 20002
+memberUid: testuser2
 
 dn: cn=admins,ou=groups,dc=example,dc=in
 objectClass: top
