@@ -16,3 +16,21 @@ Grafana login is localhost:3000 with admin/admin (it'll prompt you to set a new 
 
 Logging in with testuser should redirect you to the devops landing page, while testuser2 should redirect you to the appdev page. 
 
+Ok, now that the run directions are out of the way, here's what's actually going on.
+
+Directory structure:
+/home
+|
+|
+sso-projectdir----app--------------------------certs-------------keycloak-----------------ldap------------monitoring
+                   |                             |                   |                      |                  |
+                   |                             |                   |                      |                  |
+                   main.py templates/            ca.crt              init.sh                base.ldif          grafana/provisioning/dashboards/datasources
+                                |                ca.key              realm-export.json      seed.ldif          prometheus.yml          |            |
+                                |                ca.srl              realm-export.sh        seed.sh            promtail.yml            |            |
+                                403.html         dhparam.pem                                slapd.conf                                 dashboard.yml|
+                                appdev.html      generate.sh                                                                           FastAPI-1772888747131.json
+                                base.html        ldap.crt                                                                              Keycloak-1772888768333.json
+                                devops.html      ldap.csr                                                                              OpenLDAP-1772888780488.json
+                                home.html        ldap.key                                                                                           |
+                                                 truststore.jks                                                                                     datasources.yml
