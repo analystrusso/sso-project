@@ -19,6 +19,7 @@ Logging in with testuser should redirect you to the devops landing page, while t
 Ok, now that the run directions are out of the way, here's what's actually going on.
 
 Directory structure:
+```
 sso-project/
         app/
             main.py
@@ -59,3 +60,4 @@ sso-project/
                     FastAPI-1772888747131.json
                     Keycloak-1772888768333.json
                     OpenLDAP-1772888780488.json
+```
