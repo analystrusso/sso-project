@@ -22,13 +22,13 @@ Directory structure:
 ```
 sso-project/
         app/
-            main.py
-            templates/
-                403.html
-                appdev.html
-                base.html
-                devops.html
-                home.html
+            main.py           # app logic goes here, including determining who has access to what based on role.
+            templates/        
+                403.html      # unauthorized access page.
+                appdev.html   # users with appdev access can use this.
+                base.html     # base page layout, including navbar. Role pages are superimposed upon this base.
+                devops.html   # users with devops access can use this.
+                home.html     # this is the landing page after initial login. role-based links will appear here (eg appdev or devops).
         certs/
             ca.crt
             ca.key
@@ -40,22 +40,22 @@ sso-project/
             ldap.key
             truststore.jks
         keycloak/
-            init.sh
+            init.sh          # this is the main initialization script. It sets up keycloak, syncs users from ldap, and more.
             realm-export.sh
             realm-export.json
         ldap/
             base.ldif
             seed.ldif
-            seed.sh
+            seed.sh          # this script applies whatever users are configured in seed.ldif.
             slapd.conf
-        monitoring/
+        monitoring/          # this directory contains all the monitoring configuration for the stack: dashboards and datasources.
             grafana/
             prometheus.yml
             promtail.yml
                 provisioning/
                 datasources/
                     datasources.yml
-                dashboards/
+                dashboards/  # these dashboards are automatically imported into Grafana.
                     dashboards.yml
                     FastAPI-1772888747131.json
                     Keycloak-1772888768333.json
