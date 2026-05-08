@@ -2,6 +2,8 @@
 
 A containerized single sign-on platform built on a real enterprise architecture: OpenLDAP as the identity source of truth, Keycloak as the identity provider, and FastAPI as a role-gated intranet web application. The full stack — including observability — runs in Docker Compose and provisions itself from scratch with a single command.
 
+I built this project because every company I've ever worked for had an intranet and single sign-on, and even my present employer uses Keycloak so I thought it behooved me to learn how they work. Along the way, I dipped my toes into role-based access control, cookie-based authorization, directory management with LDAP, and ended up with a functional thing that, with polishing, people could conceivably use.
+
 ---
 
 ## Architecture
