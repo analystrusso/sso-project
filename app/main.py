@@ -6,7 +6,6 @@ from fastapi.templating import Jinja2Templates
 from prometheus_fastapi_instrumentator import Instrumentator
 from keycloak import KeycloakOpenID
 from typing import Optional
-from jose import jwt as jose_jwt
 
 # Cookie is how FastAPI reads cookie values, Request is needed to pass to templates,
 # Jinja2Templates handles HTML rendering, OAuth2AuthorizationCodeBearer is gone entirely
@@ -36,22 +35,17 @@ templates = Jinja2Templates(directory="templates")
 # Get_current_user reads the access_token cookie and decodes it. Returns none if no or invalid cookie.
 # This never raises an exception -- it's a soft check used by routes that work for logged-in and 
 # anonymous users.
-def get_current_user(access_token: Optional[str] = Cookie(None)):
+def get_current_user(access_token: Optional[str]):
     if not access_token:
         logger.info("get_current_user: no cookie found")
         return None
     try:
-        token_info = jose_jwt.decode(
+        return keycloak_openid.decode_token(
             access_token,
-            key="",
-            algorithms=["RS256"],
-            options={"verify_signature": False, "verify_aud": False, "verify_exp": True}
+            check_claims={"azp": client, "exp": None}
         )
-        logger.info(f"get_current_user: decoded token for {token_info.get('preferred_username')}")
-        logger.info(f"get_current_user: full token: {token_info}")
-        return token_info
-    except Exception as e:
-        logger.warning(f"get_current_user: decode failed: {e}")
+    except Exception:
+        logger.warning("Token decode failed")
         return None
 
 # Require_role reads the token from Cookie(None) instead of Depends(oauth2_scheme) from last iteration.
@@ -63,12 +57,11 @@ def require_role(required_role: str):
         if not access_token:
             return RedirectResponse(url="/login")
         try:
-            token_info = jose_jwt.decode(
+            token_info = keycloak_openid.decode_token(
                 access_token,
-                key="",
-                algorithms=["RS256"],
-                options={"verify_signature": False, "verify_aud": False, "verify_exp": True}
-)
+                check_claims={"azp": client, "exp": None}
+                
+        )
             roles = token_info.get("realm_access", {}).get("roles", [])
             if required_role not in roles:
                 logger.warning(f"Access denied: missing role '{required_role}'")
@@ -159,18 +152,18 @@ async def logout():
 # the `token_info` dict (success). FastAPI's `Depends` passes whatever `require_role` returns as `user`, 
 # so the route needs to check what it got and either pass it through or render the page.
 @app.get("/devops")
-async def devops_page(request, user=Depends(require_role("devops"))):
+async def devops_page(request: Request, user=Depends(require_role("devops"))):
     if isinstance(user, RedirectResponse) or isinstance(user, HTMLResponse):
         return user
-    return templates.TemplateResponse("devops.html", {
+    return templates.TemplateResponse(request, "devops.html", {
         "username": user.get("preferred_username")
     })
 
 @app.get("/appdev")
-async def appdev_page(request, user=Depends(require_role("appdev"))):
+async def appdev_page(request: Request, user=Depends(require_role("appdev"))):
     if isinstance(user, RedirectResponse) or isinstance(user, HTMLResponse):
         return user
-    return templates.TemplateResponse("appdev.html", {
+    return templates.TemplateResponse(request, "appdev.html", {
         "username": user.get("preferred_username")
     })
 
