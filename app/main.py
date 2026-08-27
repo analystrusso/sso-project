@@ -73,8 +73,9 @@ def require_role(required_role: str):
             if required_role not in roles:
                 logger.warning(f"Access denied: missing role '{required_role}'")
                 return templates.TemplateResponse(
+                    request,
                     "403.html",
-                    {"request": request, "username": token_info.get("preferred_username")},
+                    {"username": token_info.get("preferred_username")},
                     status_code=status.HTTP_403_FORBIDDEN
                 )
             return token_info
@@ -96,8 +97,7 @@ async def homepage(request: Request, access_token: Optional[str] = Cookie(None))
     else:
         roles = []
         username = None
-    return templates.TemplateResponse("home.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "home.html", {
         "username": username,
         "roles": roles
     })
@@ -159,20 +159,18 @@ async def logout():
 # the `token_info` dict (success). FastAPI's `Depends` passes whatever `require_role` returns as `user`, 
 # so the route needs to check what it got and either pass it through or render the page.
 @app.get("/devops")
-async def devops_page(request: Request, user=Depends(require_role("devops"))):
+async def devops_page(request, user=Depends(require_role("devops"))):
     if isinstance(user, RedirectResponse) or isinstance(user, HTMLResponse):
         return user
     return templates.TemplateResponse("devops.html", {
-        "request": request,
         "username": user.get("preferred_username")
     })
 
 @app.get("/appdev")
-async def appdev_page(request: Request, user=Depends(require_role("appdev"))):
+async def appdev_page(request, user=Depends(require_role("appdev"))):
     if isinstance(user, RedirectResponse) or isinstance(user, HTMLResponse):
         return user
     return templates.TemplateResponse("appdev.html", {
-        "request": request,
         "username": user.get("preferred_username")
     })
 
