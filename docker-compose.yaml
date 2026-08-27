@@ -23,7 +23,7 @@ services:
     environment:
       - LDAP_ADDR=ldap:389
       - LDAP_USER=cn=admin,dc=example,dc=in
-      - LDAP_PASS=secret
+      - LDAP_PASS=${LDAP_ADMIN_PASSWORD}
       - INTERVAL=30s
     ports:
       - "9330:9330"
@@ -84,7 +84,7 @@ services:
     container_name: keycloak
     environment:
       - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=adminpass
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
       - KC_TRUSTSTORE_PATHS=/opt/keycloak/certs/ca.crt
       - KC_METRICS_ENABLED=true
       - KC_HTTP_MANAGEMENT_PORT=9000
